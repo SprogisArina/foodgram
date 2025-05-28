@@ -5,11 +5,15 @@ from django.db import models
 from .constants import MAX_LENGTH, MAX_STR_LENGTH
 
 
-User = get_user_model()
-
-
 class ProjectUser(AbstractUser):
-    pass
+    avatar = models.ImageField(
+        upload_to='users/',
+        verbose_name='Аватар',
+        null=True
+    )
+
+
+User = get_user_model()
 
 
 class BaseModel(models.Model):
@@ -20,6 +24,9 @@ class BaseModel(models.Model):
 
     def __str__(self):
         return self.name[:MAX_STR_LENGTH]
+
+    class Meta:
+        abstract = True
 
 
 class Ingredient(BaseModel):
@@ -59,6 +66,7 @@ class Recipe(BaseModel):
         verbose_name='Автор рецепта'
     )
     image = models.ImageField(
+        verbose_name='Фото',
         upload_to='recipes/images/'
     )
     text = models.TextField(verbose_name='Описание')
@@ -75,21 +83,23 @@ class Recipe(BaseModel):
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления'
     )
-    pub_date = models.DateTimeField(verbose_name='Дата публикации')
+    pub_date = models.DateTimeField(
+        verbose_name='Дата публикации',
+        auto_now_add=True,
+        db_index=True
+    )
 
     class Meta:
         verbose_name = 'рецепт'
         verbose_name_plural = 'Рецепты'
-        ordering = ('-created_at')
+        ordering = ('-pub_date',)
         default_related_name = 'recipes'
 
 
 class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    amount = models.PositiveIntegerField(
-        verbose_name='Количество ингредиента'
-    )
+    amount = models.PositiveIntegerField()
 
     def __str__(self):
         return f'{self.ingredient} {self.recipe}'
@@ -104,24 +114,55 @@ class TagRecipe(models.Model):
 
 
 class Follow(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='following'
+    )
     following = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.user} {self.following}'
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'following'),
+                name='unique_follower'
+            ),
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('following')),
+                name='self-following'
+            )
+        ]
 
-class SelectedRecipe(models.Model):
+
+class SelectRecipe(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.user} {self.recipe}'
 
+    class Meta:
+        abstract = True
 
-class Favorite(SelectedRecipe):
-    pass
+
+class Favorite(SelectRecipe):
+    class Meta:
+        default_related_name = 'favorites'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_favorite'
+            ),
+        ]
 
 
-class Cart(SelectedRecipe):
-    pass
+class Cart(SelectRecipe):
+    class Meta:
+        default_related_name = 'cart'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'recipe'),
+                name='unique_recipe_in_cart'
+            ),
+        ]
