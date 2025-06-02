@@ -1,14 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import render
-from rest_framework import viewsets
-from rest_framework.decorators import action
+from rest_framework import status, viewsets
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from .models import (
     Cart, Favorite, Follow, Ingredient, Recipe, Tag
 )
 from .serializers import (
-    IngredientSerializer, RecipeSerializer, TagSerializer
+    AvatarSerializer, IngredientSerializer, RecipeSerializer, TagSerializer
 )
 
 
@@ -23,6 +23,26 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+
+
+@api_view(http_method_names=['PUT', 'DELETE'])
+def set_avatar(request):
+    user = request.user
+    if request.method == 'PUT':
+        serializer = AvatarSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            {'avatar': ["Обязательное поле."]},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    user.avatar = None
+    user.save()
+    return Response(
+        {'message': 'Аватар успешно удалён'},
+        status=status.HTTP_204_NO_CONTENT
+    )
 
 
 class RecipeViewSet(viewsets.ModelViewSet):

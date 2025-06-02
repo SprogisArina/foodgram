@@ -6,6 +6,7 @@ from .constants import MAX_LENGTH, MAX_STR_LENGTH
 
 
 class ProjectUser(AbstractUser):
+    email = models.EmailField(unique=True)
     avatar = models.ImageField(
         upload_to='users/',
         verbose_name='Аватар',

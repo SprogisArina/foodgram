@@ -23,7 +23,7 @@ class Base64ImageField(serializers.ImageField):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    avatar = Base64ImageField(required=False, allow_null=True)
+    avatar = Base64ImageField(required=False, allow_null=True, read_only=True)
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -45,6 +45,14 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
+class AvatarSerializer(serializers.ModelSerializer):
+    avatar = Base64ImageField()
+
+    class Meta:
+        model = User
+        fields = ('avatar',)
+
+
 class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -52,11 +60,27 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('name', 'id', 'measurement_unit')
 
 
+class InputIngredientSerializer(serializers.ModelSerializer):
+    ingredient_info = serializers.SerializerMethodField()
+
+    class Meta:
+        model = IngredientRecipe
+        fields = ('id', 'amount', 'ingredient_info')
+
+    def get_ingredient_info(self, obj):
+        ingredient = Ingredient.objects.filter(name=obj.ingredient)
+        return {
+            'name': ingredient.name,
+            'measurement_unit': ingredient.measurement_unit
+        }
+
+
 class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
         fields = ('id', 'name', 'slug')
+        read_only_fields = ('name', 'slug')
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -64,8 +88,11 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
-    ingredients = IngredientSerializer(many=True)
-    tags = TagSerializer(many=True)
+    ingredients = InputIngredientSerializer(many=True)
+    # tags = serializers.PrimaryKeyRelatedField(
+    #     many=True, queryset=Tag.objects.all()
+    # )
+    # tags = TagSerializer(many=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
