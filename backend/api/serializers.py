@@ -2,6 +2,7 @@ import base64
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 
 from .models import (
@@ -43,6 +44,15 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.image = validated_data.get('image', instance.image)
         return instance
+
+
+class ProjectUserCreateSerializer(UserCreateSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name', 'password'
+        )
 
 
 class AvatarSerializer(serializers.ModelSerializer):

@@ -13,6 +13,9 @@ class ProjectUser(AbstractUser):
         null=True
     )
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username',)
+
 
 User = get_user_model()
 
