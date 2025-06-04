@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
@@ -54,6 +54,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, url_path='get-link')
     def get_link(self, request, pk=None):
-        recipe = Recipe.objects.filter(pk=self.kwargs.get('pk'))
-        serializer = self.get_serializer(recipe)
-        return Response(serializer.data)
+        recipe = get_object_or_404(Recipe, pk=pk)
+        short_link = request.build_absolute_uri(f'/api/recipes/{pk}/')
+        return Response(
+            {'short-link': short_link}, status=status.HTTP_200_OK
+        )
