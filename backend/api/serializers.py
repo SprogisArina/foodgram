@@ -147,17 +147,23 @@ class RecipeSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get('image', instance.image)
         instance.text = validated_data.get('text', instance.text)
         instance.cooking_time = validated_data.get(
-            'name', instance.cooking_time
+            'cooking_time', instance.cooking_time
         )
-        fields = {
-            'tags': instance.tags,
-            'ingredients': instance.ingredients
-        }
-        for field, instance_field in fields.items():
-            new_values = validated_data.pop(field)
-            instance_field.clear()
-            for value in new_values:
-                instance_field.add(value)
+
+        if 'tags' in validated_data:
+            tags_data = validated_data.pop('tags')
+            instance.tags.set(tags_data)
+
+        if 'ingredients' in validated_data:
+            ingredients_data = validated_data.pop('ingredients')
+            instance.ingredientrecipe_set.all().delete()
+            IngredientRecipe.objects.bulk_create([
+                IngredientRecipe(
+                    ingredient=ingredient_data['id'],
+                    recipe=instance,
+                    amount=ingredient_data['amount']
+                ) for ingredient_data in ingredients_data
+            ])
         instance.save()
         return instance
 
