@@ -2,6 +2,7 @@ import base64
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from django.db.models import F
 from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 
@@ -101,7 +102,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                 'id': tr.tag.id,
                 'name': tr.tag.name,
                 'slug': tr.tag.slug
-            } for tr in instance.tagrecipe_set.all()
+            } for tr in instance.tagrecipe_set.select_related('tag')
         ]
         representation['ingredients'] = [
             {
@@ -109,7 +110,8 @@ class RecipeSerializer(serializers.ModelSerializer):
                 'amount': ir.amount,
                 'name': ir.ingredient.name,
                 'measurement_unit': ir.ingredient.measurement_unit
-            } for ir in instance.ingredientrecipe_set.all()
+            } for ir in instance.ingredientrecipe_set
+            .select_related('ingredient')
         ]
         return representation
 
