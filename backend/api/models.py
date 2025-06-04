@@ -103,7 +103,7 @@ class Recipe(BaseModel):
 class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    amount = models.PositiveIntegerField()
+    amount = models.IntegerField()
 
     def __str__(self):
         return f'{self.ingredient} {self.recipe}'
