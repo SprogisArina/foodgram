@@ -5,6 +5,7 @@ from django.core.files.base import ContentFile
 from django.db.models import F
 from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from .models import (
     Cart, Favorite, Follow, Ingredient, IngredientRecipe, Recipe, Tag,
@@ -168,19 +169,36 @@ class RecipeSerializer(serializers.ModelSerializer):
         return instance
 
 
-class FollowSerializer(serializers.ModelSerializer):
+class ShortRecipeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'image', 'name', 'cooking_time')
+        read_only_fields = ('id', 'image', 'name', 'cooking_time')
+
+
+class FollowSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
-        model = Follow
-        fields = ('recipes', 'recipes_count')
-        read_only_fields = ('recipes', 'recipes_count')
+        model = User
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name', 'avatar',
+            'is_subscribed', 'recipes', 'recipes_count'
+        )
+        read_only_fields = fields
 
-    def validate_following(self, value):
-        if value == self.context['request'].user.id:
-            raise serializers.ValidationError('Нельзя подписаться на себя!')
-        return value
+    def get_recipes(self, obj):
+        recipes = obj.recipes.all()
+        recipes_limit = self.context['request'].query_params.get(
+            'recipes_limit')
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        return ShortRecipeSerializer(recipes, many=True).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
