@@ -199,11 +199,3 @@ class FollowSerializer(UserSerializer):
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
-
-
-class FavoriteSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Favorite
-        fields = '__all__'
-        read_only_fields = ('user', 'recipe')

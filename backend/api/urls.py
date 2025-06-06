@@ -3,6 +3,8 @@ from rest_framework import routers
 
 from .views import (
     IngredientViewSet,
+    CartCreateDestroyApiView,
+    FavoriteCreateDestroyApiView,
     FollowCreateDestroyApiView,
     FollowListAPIView,
     RecipeViewSet,
@@ -23,6 +25,10 @@ urlpatterns = [
          name='subscriptions'),
     path('users/<int:pk>/subscribe/',
          FollowCreateDestroyApiView.as_view(), name='subscribe'),
+    path('recipes/<int:pk>/favorite/', FavoriteCreateDestroyApiView.as_view(),
+         name='favorite'),
+    path('recipes/<int:pk>/shopping_cart/', CartCreateDestroyApiView.as_view(),
+         name='shopping_cart'),
     path('', include(router.urls)),
     path('', include('djoser.urls')),
 ]

@@ -10,7 +10,7 @@ from .models import (
 )
 from .serializers import (
     AvatarSerializer, IngredientSerializer,
-    FollowSerializer, RecipeSerializer, TagSerializer
+    FollowSerializer, RecipeSerializer, ShortRecipeSerializer, TagSerializer
 )
 
 
@@ -63,11 +63,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
 
 
+class FollowListAPIView(generics.ListAPIView):
+    serializer_class = FollowSerializer
+
+    def get_queryset(self):
+        return self.request.user.following.prefetch_related('recipes')
+
+
 class FollowCreateDestroyApiView(
     generics.CreateAPIView, generics.DestroyAPIView
 ):
     serializer_class = FollowSerializer
-    queryset = Follow.objects.all()
 
     def get_follow(self, following):
         return Follow.objects.filter(
@@ -78,9 +84,9 @@ class FollowCreateDestroyApiView(
         following = get_object_or_404(User, pk=self.kwargs.get('pk'))
 
         if following == request.user:
-            raise ValidationError({'datail': 'Нельзя подписаться на себя'})
+            raise ValidationError({'detail': 'Нельзя подписаться на себя'})
         elif self.get_follow(following).exists():
-            raise ValidationError({'datail': 'Подписка уже существует'})
+            raise ValidationError({'detail': 'Подписка уже существует'})
 
         Follow.objects.create(user=request.user, following=following)
         serializer = self.get_serializer(following)
@@ -91,16 +97,62 @@ class FollowCreateDestroyApiView(
         follow = self.get_follow(following)
 
         if not follow:
-            raise ValidationError({'datail': 'Вы не были подписаны'})
+            raise ValidationError({'detail': 'Вы не были подписаны'})
 
         return follow
 
 
-class FollowListAPIView(generics.ListAPIView):
-    serializer_class = FollowSerializer
+class FavoriteCreateDestroyApiView(
+    generics.CreateAPIView, generics.DestroyAPIView
+):
+    serializer_class = ShortRecipeSerializer
 
-    def get_queryset(self):
-        return self.request.user.following.prefetch_related('recipes')
-    
+    def create(self, request, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, pk=self.kwargs['pk'])
+
+        if Favorite.objects.filter(user=request.user, recipe=recipe).exists():
+            raise ValidationError({'detail': 'Рецепт уже в избранном'})
+
+        Favorite.objects.create(user=request.user, recipe=recipe)
+        serialiser = self.get_serializer(recipe)
+        return Response(
+            serialiser.data, status=status.HTTP_201_CREATED
+        )
+
+    def get_object(self):
+        recipe = get_object_or_404(Recipe, pk=self.kwargs['pk'])
+        favorite = Favorite.objects.filter(
+            user=self.request.user, recipe=recipe
+        )
+        if not favorite:
+            raise ValidationError({'detail': 'Рецепта не было в избранном'})
+
+        return favorite
 
 
+class CartCreateDestroyApiView(
+    generics.CreateAPIView, generics.DestroyAPIView
+):
+    serializer_class = ShortRecipeSerializer
+
+    def create(self, request, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, pk=self.kwargs['pk'])
+
+        if Cart.objects.filter(user=request.user, recipe=recipe).exists():
+            raise ValidationError({'detail': 'Рецепт уже в корзине'})
+
+        Cart.objects.create(user=request.user, recipe=recipe)
+        serialiser = self.get_serializer(recipe)
+        return Response(
+            serialiser.data, status=status.HTTP_201_CREATED
+        )
+
+    def get_object(self):
+        recipe = get_object_or_404(Recipe, pk=self.kwargs['pk'])
+        in_cart = Cart.objects.filter(
+            user=self.request.user, recipe=recipe
+        )
+        if not in_cart:
+            raise ValidationError({'detail': 'Рецепта не было корзине'})
+
+        return in_cart
