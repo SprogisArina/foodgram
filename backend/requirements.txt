@@ -1,6 +1,7 @@
 asgiref==3.8.1
 certifi==2025.4.26
 cffi==1.17.1
+chardet==5.2.0
 charset-normalizer==3.4.2
 cryptography==45.0.3
 defusedxml==0.7.1
@@ -16,6 +17,7 @@ PyJWT==2.9.0
 python-dotenv==1.1.0
 python3-openid==3.2.0
 pytz==2025.2
+reportlab==4.4.1
 requests==2.32.3
 requests-oauthlib==2.0.0
 social-auth-app-django==5.4.3

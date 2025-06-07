@@ -9,6 +9,7 @@ from .views import (
     FollowListAPIView,
     RecipeViewSet,
     TagViewSet,
+    download_shopping_cart,
     set_avatar
 )
 
@@ -25,6 +26,8 @@ urlpatterns = [
          name='subscriptions'),
     path('users/<int:pk>/subscribe/',
          FollowCreateDestroyApiView.as_view(), name='subscribe'),
+    path('recipes/download_shopping_cart/', download_shopping_cart,
+         name='download_shopping_cart'),
     path('recipes/<int:pk>/favorite/', FavoriteCreateDestroyApiView.as_view(),
          name='favorite'),
     path('recipes/<int:pk>/shopping_cart/', CartCreateDestroyApiView.as_view(),

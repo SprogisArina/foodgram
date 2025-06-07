@@ -1,12 +1,20 @@
+from io import BytesIO
+
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404, render
+from django.db.models import Sum
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from .models import (
-    Cart, Favorite, Follow, Ingredient, Recipe, Tag
+    Cart, Favorite, Follow, Ingredient, IngredientRecipe, Recipe, Tag
 )
 from .serializers import (
     AvatarSerializer, IngredientSerializer,
@@ -45,6 +53,41 @@ def set_avatar(request):
         {'message': 'Аватар успешно удалён'},
         status=status.HTTP_204_NO_CONTENT
     )
+
+
+@api_view(http_method_names=['GET'])
+def download_shopping_cart(request):
+    pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    p.setFont('Arial', 14)
+    p.drawString(100, 780, 'Список покупок:')
+
+    cart = request.user.cart.select_related('recipe').all()
+    ingredients = IngredientRecipe.objects.filter(
+        recipe__in=[item.recipe for item in cart]
+    ).values(
+        'ingredient__name', 'ingredient__measurement_unit'
+    ).annotate(sum_amount=Sum('amount'))
+
+    y_position = 740
+    for ingr in ingredients:
+        text = (
+            f"- {ingr['ingredient__name']}: "
+            f"{ingr['sum_amount']} {ingr['ingredient__measurement_unit']}"
+        )
+        p.drawString(100, y_position, text)
+        y_position -= 20
+
+    p.save()
+    buffer.seek(0)
+    response = FileResponse(
+        buffer,
+        as_attachment=True,
+        filename='shopping_list.pdf',
+        status=status.HTTP_200_OK
+    )
+    return response
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
