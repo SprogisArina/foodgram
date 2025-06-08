@@ -4,18 +4,24 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import generics, status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework import filters, generics, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
+from rest_framework.permissions import (
+    IsAuthenticated, IsAuthenticatedOrReadOnly
+)
 
+from .filters import RecipeFilter
 from .models import (
     Cart, Favorite, Follow, Ingredient, IngredientRecipe, Recipe, Tag
 )
+from .permissions import AuthorOrAdminPermission
 from .serializers import (
     AvatarSerializer, IngredientSerializer,
     FollowSerializer, RecipeSerializer, ShortRecipeSerializer, TagSerializer
@@ -28,11 +34,15 @@ User = get_user_model()
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    filter_backends = (filters.SearchFilter,)
+    pagination_class = None
+    search_fields = ('name',)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    pagination_class = None
 
 
 @api_view(http_method_names=['PUT', 'DELETE'])
@@ -56,6 +66,7 @@ def set_avatar(request):
 
 
 @api_view(http_method_names=['GET'])
+@permission_classes(IsAuthenticated,)
 def download_shopping_cart(request):
     pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
     buffer = BytesIO()
@@ -93,6 +104,9 @@ def download_shopping_cart(request):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
+    permission_classes = (AuthorOrAdminPermission, IsAuthenticatedOrReadOnly)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -108,6 +122,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 class FollowListAPIView(generics.ListAPIView):
     serializer_class = FollowSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return User.objects.filter(
@@ -185,31 +200,3 @@ class CartCreateDestroyApiView(BasicCreateDestroyApiView):
     relation_field = 'recipe'
     exist_message = 'Рецепт уже в корзине'
     not_exist_message = 'Рецепта не было в корзине'
-
-
-# class CartCreateDestroyApiView(
-#     generics.CreateAPIView, generics.DestroyAPIView
-# ):
-#     serializer_class = ShortRecipeSerializer
-
-#     def create(self, request, *args, **kwargs):
-#         recipe = get_object_or_404(Recipe, pk=self.kwargs['pk'])
-
-#         if Cart.objects.filter(user=request.user, recipe=recipe).exists():
-#             raise ValidationError({'detail': 'Рецепт уже в корзине'})
-
-#         Cart.objects.create(user=request.user, recipe=recipe)
-#         serialiser = self.get_serializer(recipe)
-#         return Response(
-#             serialiser.data, status=status.HTTP_201_CREATED
-#         )
-
-#     def get_object(self):
-#         recipe = get_object_or_404(Recipe, pk=self.kwargs['pk'])
-#         in_cart = Cart.objects.filter(
-#             user=self.request.user, recipe=recipe
-#         )
-#         if not in_cart:
-#             raise ValidationError({'detail': 'Рецепта не было корзине'})
-
-#         return in_cart
