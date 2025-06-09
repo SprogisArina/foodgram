@@ -36,7 +36,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     filter_backends = (filters.SearchFilter,)
     pagination_class = None
-    search_fields = ('name',)
+    search_fields = ('^name',)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -66,7 +66,7 @@ def set_avatar(request):
 
 
 @api_view(http_method_names=['GET'])
-@permission_classes(IsAuthenticated,)
+@permission_classes((IsAuthenticated,))
 def download_shopping_cart(request):
     pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
     buffer = BytesIO()

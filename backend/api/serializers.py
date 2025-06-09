@@ -18,6 +18,7 @@ User = get_user_model()
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
+
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
@@ -38,6 +39,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
         following = Follow.objects.filter(
             user=user, following=obj.pk
         )
@@ -117,14 +120,20 @@ class RecipeSerializer(serializers.ModelSerializer):
         return representation
 
     def get_is_favorited(self, obj):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
         return Favorite.objects.filter(
-            user=self.context['request'].user,
+            user=user,
             recipe=obj.pk
         ).exists()
 
     def get_is_in_shopping_cart(self, obj):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
         return Cart.objects.filter(
-            user=self.context['request'].user,
+            user=user,
             recipe=obj.pk
         ).exists()
 
