@@ -154,7 +154,11 @@ DJOSER = {
     },
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
-    }
+        'user': ['api.permissions.AdminOrReadOnlyPermission'],
+        'user_delete': ['rest_framework.permissions.IsAdminUser'],
+        'user_update': ['rest_framework.permissions.IsAdminUser'],
+    },
+    'HIDE_USERS': False
 }
 
 AUTHENTICATION_BACKENDS = [
