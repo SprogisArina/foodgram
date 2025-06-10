@@ -135,11 +135,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
-
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 6,
 }
 
 DJOSER = {
@@ -154,11 +154,11 @@ DJOSER = {
     },
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
-        'user': ['api.permissions.AdminOrReadOnlyPermission'],
+        'user': ['api.permissions.AdminOrReadOnlyPermission']
     },
     'HIDE_USERS': False
 }
 
 AUTHENTICATION_BACKENDS = [
-    "djoser.auth_backends.LoginFieldBackend",
+    'djoser.auth_backends.LoginFieldBackend',
 ]

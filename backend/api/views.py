@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import filters, generics, status, viewsets
+from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
@@ -17,7 +17,7 @@ from rest_framework.permissions import (
     IsAuthenticated, IsAuthenticatedOrReadOnly
 )
 
-from .filters import RecipeFilter
+from .filters import NameSearchFilter, RecipeFilter
 from .models import (
     Cart, Favorite, Follow, Ingredient, IngredientRecipe, Recipe, Tag
 )
@@ -34,7 +34,7 @@ User = get_user_model()
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (NameSearchFilter,)
     pagination_class = None
     search_fields = ('^name',)
 
@@ -46,6 +46,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 @api_view(http_method_names=['PUT', 'DELETE'])
+@permission_classes((IsAuthenticated,))
 def set_avatar(request):
     user = request.user
     if request.method == 'PUT':
@@ -54,7 +55,7 @@ def set_avatar(request):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(
-            {'avatar': ["Обязательное поле."]},
+            {'avatar': ['Обязательное поле.']},
             status=status.HTTP_400_BAD_REQUEST
         )
     user.avatar = None
