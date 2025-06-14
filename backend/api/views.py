@@ -1,6 +1,7 @@
 import os
 from io import BytesIO
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
@@ -16,8 +17,6 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-
-from foodgram_backend.settings import BASE_DIR
 
 from .filters import NameSearchFilter, RecipeFilter
 from .models import (Cart, Favorite, Follow, Ingredient, IngredientRecipe,
@@ -68,7 +67,7 @@ def set_avatar(request):
 @api_view(http_method_names=['GET'])
 @permission_classes([IsAuthenticated])
 def download_shopping_cart(request):
-    font_path = os.path.join(BASE_DIR, 'fonts', 'arial.ttf')
+    font_path = os.path.join(settings.BASE_DIR, 'fonts', 'arial.ttf')
     pdfmetrics.registerFont(TTFont('Arial', font_path))
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
