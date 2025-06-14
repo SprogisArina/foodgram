@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 
 from .models import Ingredient, Recipe, Tag
 
-
 admin.site.empty_value_display = 'Не указано'
 
 

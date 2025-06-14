@@ -3,18 +3,10 @@ from djoser.views import UserViewSet
 from rest_framework import routers
 from rest_framework.permissions import IsAuthenticated
 
-
-from .views import (
-    IngredientViewSet,
-    CartCreateDestroyApiView,
-    FavoriteCreateDestroyApiView,
-    FollowCreateDestroyApiView,
-    FollowListAPIView,
-    RecipeViewSet,
-    TagViewSet,
-    download_shopping_cart,
-    set_avatar
-)
+from .views import (CartCreateDestroyApiView, FavoriteCreateDestroyApiView,
+                    FollowCreateDestroyApiView, FollowListAPIView,
+                    IngredientViewSet, RecipeViewSet, TagViewSet,
+                    download_shopping_cart, set_avatar)
 
 router = routers.DefaultRouter()
 router.register('ingredients', IngredientViewSet, basename='ingredients')

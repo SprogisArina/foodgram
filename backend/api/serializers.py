@@ -5,10 +5,8 @@ from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 
-from .models import (
-    Cart, Favorite, Follow, Ingredient, IngredientRecipe, Recipe, Tag
-)
-
+from .models import (Cart, Favorite, Follow, Ingredient, IngredientRecipe,
+                     Recipe, Tag)
 
 User = get_user_model()
 

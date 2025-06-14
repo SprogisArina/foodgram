@@ -11,22 +11,18 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-from rest_framework.permissions import (
-    IsAuthenticated, IsAuthenticatedOrReadOnly
-)
 
 from .filters import NameSearchFilter, RecipeFilter
-from .models import (
-    Cart, Favorite, Follow, Ingredient, IngredientRecipe, Recipe, Tag
-)
+from .models import (Cart, Favorite, Follow, Ingredient, IngredientRecipe,
+                     Recipe, Tag)
 from .permissions import AuthorOrAdminPermission
-from .serializers import (
-    AvatarSerializer, IngredientSerializer,
-    FollowSerializer, RecipeSerializer, ShortRecipeSerializer, TagSerializer
-)
-
+from .serializers import (AvatarSerializer, FollowSerializer,
+                          IngredientSerializer, RecipeSerializer,
+                          ShortRecipeSerializer, TagSerializer)
 
 User = get_user_model()
 
