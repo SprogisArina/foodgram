@@ -1,0 +1,39 @@
+version: '3.3'
+
+volumes:
+  pg_data:
+  static:
+  media_recipes:
+  media_users:
+
+services:
+  db:
+    image: postgres:13
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  backend:
+    image: asiasi/foodgram_backend
+    env_file: .env
+    depends_on:
+      - db
+    volumes:
+      - static:/backend_static
+      - media_recipes:/app/media/recipes/images
+      - media_users:/app/media/users
+  frontend:
+    image: asiasi/foodgram_frontend
+    volumes:
+      - static:/frontend_static
+    command: cp -r /app/build/. /frontend_static/
+  nginx:
+    image: asiasi/foodgram_gateway
+    ports:
+      - 8000:80
+    volumes:
+      - static:/static
+      - media_recipes:/media/recipes/images
+      - media_users:/media/users
+    depends_on:
+      - backend
+      - frontend

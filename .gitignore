@@ -141,5 +141,3 @@ dmypy.json
 
 static/
 media/
-
-docker-compose.production.yml
