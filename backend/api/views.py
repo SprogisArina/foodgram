@@ -18,7 +18,6 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from foodgram_backend.settings import BASE_DIR
-
 from .filters import NameSearchFilter, RecipeFilter
 from .models import (Cart, Favorite, Follow, Ingredient, IngredientRecipe,
                      Recipe, Tag)
