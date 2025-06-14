@@ -24,6 +24,7 @@ from .serializers import (AvatarSerializer, FollowSerializer,
                           IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer)
 
+
 User = get_user_model()
 
 
@@ -111,7 +112,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True, url_path='get-link')
     def get_link(self, request, pk=None):
         get_object_or_404(Recipe, pk=pk)
-        short_link = request.build_absolute_uri(f'/api/recipes/{pk}/')
+        short_link = request.build_absolute_uri(f'/recipes/{pk}/')
         return Response(
             {'short-link': short_link}, status=status.HTTP_200_OK
         )
