@@ -63,7 +63,7 @@ def set_avatar(request):
 
 
 @api_view(http_method_names=['GET'])
-@permission_classes((IsAuthenticated,))
+@permission_classes([IsAuthenticated])
 def download_shopping_cart(request):
     pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
     buffer = BytesIO()
@@ -87,13 +87,18 @@ def download_shopping_cart(request):
         p.drawString(100, y_position, text)
         y_position -= 20
 
+    p.showPage()
     p.save()
     buffer.seek(0)
     response = FileResponse(
         buffer,
         as_attachment=True,
         filename='shopping_list.pdf',
+        content_type='application/pdf',
         status=status.HTTP_200_OK
+    )
+    response['Content-Disposition'] = (
+        'attachment; filename="shopping_list.pdf"'
     )
     return response
 
