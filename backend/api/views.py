@@ -65,7 +65,9 @@ def set_avatar(request):
 @api_view(http_method_names=['GET'])
 @permission_classes([IsAuthenticated])
 def download_shopping_cart(request):
-    pdfmetrics.registerFont(TTFont('Arial', 'arial.ttf'))
+    pdfmetrics.registerFont(
+        TTFont('Arial', '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf')
+    )
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
     p.setFont('Arial', 14)
@@ -94,8 +96,7 @@ def download_shopping_cart(request):
         buffer,
         as_attachment=True,
         filename='shopping_list.pdf',
-        content_type='application/pdf',
-        status=status.HTTP_200_OK
+        content_type='application/pdf'
     )
     response['Content-Disposition'] = (
         'attachment; filename="shopping_list.pdf"'
