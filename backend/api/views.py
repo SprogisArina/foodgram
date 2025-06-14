@@ -17,6 +17,8 @@ from rest_framework.permissions import (IsAuthenticated,
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
+from foodgram_backend.settings import BASE_DIR
+
 from .filters import NameSearchFilter, RecipeFilter
 from .models import (Cart, Favorite, Follow, Ingredient, IngredientRecipe,
                      Recipe, Tag)
@@ -24,7 +26,6 @@ from .permissions import AuthorOrAdminPermission
 from .serializers import (AvatarSerializer, FollowSerializer,
                           IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer)
-from foodgram_backend.settings import BASE_DIR
 
 User = get_user_model()
 
