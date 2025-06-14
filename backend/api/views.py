@@ -24,7 +24,6 @@ from .serializers import (AvatarSerializer, FollowSerializer,
                           IngredientSerializer, RecipeSerializer,
                           ShortRecipeSerializer, TagSerializer)
 
-
 User = get_user_model()
 
 
