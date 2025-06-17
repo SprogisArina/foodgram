@@ -30,7 +30,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 ALLOWED_HOSTS = (os.getenv('ALLOWED_HOSTS', '')).split(', ')
 
-AUTH_USER_MODEL = 'api.ProjectUser'
+AUTH_USER_MODEL = 'users.ProjectUser'
 
 
 # Application definition
@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     'api.apps.ApiConfig',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
