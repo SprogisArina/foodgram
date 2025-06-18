@@ -144,9 +144,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         ])
 
     def create(self, validated_data):
+        author = self.context['request'].user
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
+        recipe = Recipe.objects.create(author=author, **validated_data)
         recipe.tags.set(tags)
         self.create_ingredient_recipe(
             recipe, ingredients
@@ -219,7 +220,7 @@ class FollowSerializer(UserSerializer):
         model = User
         fields = (
             'id', 'email', 'username', 'first_name', 'last_name', 'avatar',
-            'is_subscribed', 'recipes'
+            'is_subscribed', 'recipes', 'recipes_count'
         )
         read_only_fields = fields
 
@@ -230,3 +231,21 @@ class FollowSerializer(UserSerializer):
         if recipes_limit:
             recipes = recipes[:int(recipes_limit)]
         return ShortRecipeSerializer(recipes, many=True).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        following = self.context['following']
+
+        if user == following:
+            raise serializers.ValidationError(
+                {'detail': 'Нельзя подписаться на себя'}
+            )
+
+        if Follow.objects.filter(user=user, following=following).exists():
+            raise serializers.ValidationError(
+                {'detail': 'Подписка уже существует'}
+            )
+        return attrs
