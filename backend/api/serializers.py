@@ -215,6 +215,7 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
@@ -232,11 +233,10 @@ class FollowSerializer(UserSerializer):
             recipes = recipes[:int(recipes_limit)]
         return ShortRecipeSerializer(recipes, many=True).data
 
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
 
+class FollowCreateSerializer(serializers.Serializer):
     def validate(self, attrs):
-        user = self.context['request'].user
+        user = self.context['user']
         following = self.context['following']
 
         if user == following:

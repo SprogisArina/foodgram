@@ -3,7 +3,7 @@ from io import BytesIO
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.models import Sum
+from django.db.models import Count, Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -23,8 +23,9 @@ from .models import (Cart, Favorite, Follow, Ingredient, IngredientRecipe,
                      Recipe, Tag)
 from .permissions import AuthorOrAdminPermission
 from .serializers import (AvatarSerializer, FollowSerializer,
-                          IngredientSerializer, RecipeSerializer,
-                          ShortRecipeSerializer, TagSerializer)
+                          FollowCreateSerializer, IngredientSerializer,
+                          RecipeSerializer, ShortRecipeSerializer,
+                          TagSerializer)
 
 User = get_user_model()
 
@@ -54,9 +55,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_link(self, request, pk=None):
         get_object_or_404(Recipe, pk=pk)
         short_link = request.build_absolute_uri(f'/recipes/{pk}/')
-        return Response(
-            {'short-link': short_link}, status=status.HTTP_200_OK
-        )
+        return Response({'short-link': short_link}, status=status.HTTP_200_OK)
 
     @action(
         detail=False,
@@ -108,7 +107,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         if request.method == 'POST':
             if model.objects.filter(user=user, recipe=recipe).exists():
-                return Response({'detail': f'Рецепт уже в {message}'})
+                return Response(
+                    {'detail': f'Рецепт уже в {message}'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             model.objects.create(user=request.user, recipe=recipe)
             serializer = ShortRecipeSerializer(recipe)
             return Response(
@@ -116,13 +118,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED
             )
 
-        deleted, _ = model.objects.filter(
+        deleted = model.objects.filter(
             user=request.user, recipe=recipe
-        ).delete()
+        ).delete()[0]
 
         if deleted:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response({'detail': f'Рецепта не было в {message}'})
+        return Response(
+            {'detail': f'Рецепта не было в {message}'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     @action(
         detail=True,
@@ -144,6 +149,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class ProjectUserViewSet(UserViewSet):
+    lookup_field = 'pk'
 
     @action(
         detail=False,
@@ -156,7 +162,7 @@ class ProjectUserViewSet(UserViewSet):
 
         if request.method == 'PUT':
             serializer = AvatarSerializer(
-                user, data=request.data, partial=True
+                user, data=request.data
             )
             if serializer.is_valid():
                 serializer.save()
@@ -186,31 +192,40 @@ class ProjectUserViewSet(UserViewSet):
     def subscriptions(self, request):
         subscriptions = User.objects.filter(
             followers__user=request.user
-        ).prefetch_related('recipes')
+        ).prefetch_related('recipes').annotate(recipes_count=Count('recipes'))
         page = self.paginate_queryset(subscriptions)
-        serializer = FollowSerializer(page, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = FollowSerializer(
+            page, many=True, context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
 
     @action(
         detail=True,
         url_path='subscribe',
-        methods=['POST', 'DELETE']
+        methods=['POST', 'DELETE'],
+        permission_classes=[IsAuthenticated]
     )
     def subscribe(self, request, pk=None):
-        following = get_object_or_404(User, pk=pk)
+        user = request.user
+        following = get_object_or_404(
+            User.objects.annotate(recipes_count=Count('recipes')), pk=pk
+        )
 
         if request.method == 'POST':
-            serializer = FollowSerializer(following, context={
-                'request': request,
-                'following': following
-            })
-            serializer.is_valid(raise_exception=True)
-            Follow.objects.create(user=request.user, following=following)
+            validator = FollowCreateSerializer(
+                data={},
+                context={'user': user, 'following': following}
+            )
+            validator.is_valid(raise_exception=True)
+            serializer = FollowSerializer(
+                following, context={'request': request}
+            )
+            Follow.objects.create(user=user, following=following)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        deleted, _ = Follow.objects.filter(
-            user=request.user, following=following
-        ).delete()
+        deleted = Follow.objects.filter(
+            user=user, following=following
+        ).delete()[0]
 
         if deleted:
             return Response(status=status.HTTP_204_NO_CONTENT)
