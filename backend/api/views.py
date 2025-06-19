@@ -22,8 +22,8 @@ from .filters import NameSearchFilter, RecipeFilter
 from .models import (Cart, Favorite, Follow, Ingredient, IngredientRecipe,
                      Recipe, Tag)
 from .permissions import AuthorOrAdminPermission
-from .serializers import (AvatarSerializer, FollowSerializer,
-                          FollowCreateSerializer, IngredientSerializer,
+from .serializers import (AvatarSerializer, FollowCreateSerializer,
+                          FollowSerializer, IngredientSerializer,
                           RecipeSerializer, ShortRecipeSerializer,
                           TagSerializer)
 

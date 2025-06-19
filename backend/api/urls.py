@@ -2,8 +2,8 @@ from django.urls import include, path
 from rest_framework import routers
 from rest_framework.permissions import IsAuthenticated
 
-from .views import (IngredientViewSet, ProjectUserViewSet,
-                    RecipeViewSet, TagViewSet)
+from .views import (IngredientViewSet, ProjectUserViewSet, RecipeViewSet,
+                    TagViewSet)
 
 router = routers.DefaultRouter()
 router.register('ingredients', IngredientViewSet, basename='ingredients')

@@ -4,7 +4,6 @@ from django.db import models
 
 from .constants import MAX_COOKING_TIME, MAX_LENGTH, MAX_STR_LENGTH
 
-
 User = get_user_model()
 
 
