@@ -25,7 +25,7 @@ from .permissions import AuthorOrAdminPermission
 from .serializers import (AvatarSerializer, FollowCreateSerializer,
                           FollowSerializer, IngredientSerializer,
                           RecipeSerializer, ShortRecipeSerializer,
-                          TagSerializer)
+                          TagSerializer, CartSerializer, FavoriteSerializer)
 
 User = get_user_model()
 
@@ -101,26 +101,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         return response
 
-    def create_delete_relation(self, request, pk, model, message):
+    def create_delete_relation(
+            self, request, pk, model, model_serializer, message
+    ):
         recipe = get_object_or_404(Recipe, pk=pk)
         user = request.user
 
         if request.method == 'POST':
-            if model.objects.filter(user=user, recipe=recipe).exists():
-                return Response(
-                    {'detail': f'Рецепт уже в {message}'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            model.objects.create(user=request.user, recipe=recipe)
-            serializer = ShortRecipeSerializer(recipe)
+            serializer = model_serializer(
+                data={},
+                context={'user': user, 'recipe': recipe}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED
             )
 
-        deleted = model.objects.filter(
+        deleted, _ = model.objects.filter(
             user=request.user, recipe=recipe
-        ).delete()[0]
+        ).delete()
 
         if deleted:
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -136,7 +137,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def shopping_cart(self, request, pk=None):
-        return self.create_delete_relation(request, pk, Cart, 'корзине')
+        return self.create_delete_relation(
+            request, pk, Cart, CartSerializer, 'корзине'
+        )
 
     @action(
         detail=True,
@@ -145,7 +148,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def favorite(self, request, pk=None):
-        return self.create_delete_relation(request, pk, Favorite, 'избранном')
+        return self.create_delete_relation(
+            request, pk, Favorite, FavoriteSerializer, 'избранном'
+        )
 
 
 class ProjectUserViewSet(UserViewSet):
@@ -164,7 +169,7 @@ class ProjectUserViewSet(UserViewSet):
             serializer = AvatarSerializer(
                 user, data=request.data
             )
-            if serializer.is_valid():
+            if serializer.is_valid(raise_exception=True):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(
@@ -212,20 +217,21 @@ class ProjectUserViewSet(UserViewSet):
         )
 
         if request.method == 'POST':
-            validator = FollowCreateSerializer(
+            serializer = FollowCreateSerializer(
                 data={},
-                context={'user': user, 'following': following}
+                context={
+                    'user': user,
+                    'following': following,
+                    'request': request
+                }
             )
-            validator.is_valid(raise_exception=True)
-            serializer = FollowSerializer(
-                following, context={'request': request}
-            )
-            Follow.objects.create(user=user, following=following)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        deleted = Follow.objects.filter(
+        deleted, _ = Follow.objects.filter(
             user=user, following=following
-        ).delete()[0]
+        ).delete()
 
         if deleted:
             return Response(status=status.HTTP_204_NO_CONTENT)
