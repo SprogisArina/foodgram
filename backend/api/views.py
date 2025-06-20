@@ -25,7 +25,7 @@ from .permissions import AuthorOrAdminPermission
 from .serializers import (AvatarSerializer, CartSerializer, FavoriteSerializer,
                           FollowCreateSerializer, FollowSerializer,
                           IngredientSerializer, RecipeSerializer,
-                          ShortRecipeSerializer, TagSerializer)
+                          TagSerializer)
 
 User = get_user_model()
 
