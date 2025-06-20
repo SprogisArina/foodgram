@@ -22,10 +22,10 @@ from .filters import NameSearchFilter, RecipeFilter
 from .models import (Cart, Favorite, Follow, Ingredient, IngredientRecipe,
                      Recipe, Tag)
 from .permissions import AuthorOrAdminPermission
-from .serializers import (AvatarSerializer, FollowCreateSerializer,
-                          FollowSerializer, IngredientSerializer,
-                          RecipeSerializer, ShortRecipeSerializer,
-                          TagSerializer, CartSerializer, FavoriteSerializer)
+from .serializers import (AvatarSerializer, CartSerializer, FavoriteSerializer,
+                          FollowCreateSerializer, FollowSerializer,
+                          IngredientSerializer, RecipeSerializer,
+                          ShortRecipeSerializer, TagSerializer)
 
 User = get_user_model()
 

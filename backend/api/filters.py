@@ -13,7 +13,7 @@ class RecipeFilter(filters.FilterSet):
         field_name='tags__slug',
         to_field_name='slug',
         queryset=Tag.objects.all(),
-        conjoined=True
+        # conjoined=True
     )
     is_favorited = filters.NumberFilter(method='filter_is_favorited')
     is_in_shopping_cart = filters.NumberFilter(
