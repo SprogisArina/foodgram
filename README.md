@@ -14,7 +14,6 @@
 
 📥 Скачивать список ингредиентов в PDF
 
-Ссылка на [сайт](https://fooodgram.sytes.net/)
 
 Автор [SprogisArina](https://github.com/SprogisArina/)
 
